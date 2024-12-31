@@ -2,9 +2,14 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
+import { randomUUID } from 'crypto';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 dotenv.config();
 
@@ -34,6 +39,7 @@ const io = new Server(httpServer, {
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY || '');
 const model = genAI.getGenerativeModel({ model: "gemini-pro"});
 
+// Configure Express middleware
 app.use(express.json());
 app.use(cors({
   origin: allowedOrigins,
@@ -54,9 +60,10 @@ app.get('/api/health', (_, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  const distPath = join(__dirname, '../../client/dist');
+  app.use(express.static(distPath));
+  app.get('*', (_, res) => {
+    res.sendFile(join(distPath, 'index.html'));
   });
 }
 
@@ -94,7 +101,7 @@ async function generateAiSuggestion(roomId: string, username: string, relationsh
     const text = response.text();
 
     return {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       sender: "AI Assistant",
       content: text || "I'm not sure what to suggest right now.",
       timestamp: Date.now(),
@@ -164,7 +171,6 @@ io.on('connection', (socket) => {
   socket.on('request_sync', (roomId: string) => {
     const room = rooms.get(roomId);
     if (room && room.currentVideoState) {
-      // Calculate time drift since last update
       const timeDrift = (Date.now() - room.currentVideoState.lastUpdate) / 1000;
       const adjustedTime = room.currentVideoState.currentTime + (room.currentVideoState.isPlaying ? timeDrift : 0);
       
@@ -195,7 +201,6 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
-    // Remove user from all rooms they were in
     rooms.forEach((room, roomId) => {
       room.users.delete(socket.id);
       if (room.users.size === 0) {
