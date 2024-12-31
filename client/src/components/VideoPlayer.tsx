@@ -33,7 +33,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, roomId, socke
       }
     });
 
-    socket.on('pause', (timestamp: number) => {
+    socket.on('pause', () => {
       if (playerRef.current && !isUserSeeking.current) {
         playerRef.current.pauseVideo();
         setIsPlaying(false);
