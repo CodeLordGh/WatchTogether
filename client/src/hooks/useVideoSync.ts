@@ -37,10 +37,6 @@ export function useVideoSync(roomId: string) {
     socketClient.joinRoom(roomId);
     const syncInterval = setInterval(syncWithPeers, SYNC_INTERVAL);
 
-    const handlePlayerReady = () => {
-      isPlayerReady.current = true;
-    };
-
     socketClient.onRoomState(async (state) => {
       const player = getPlayer();
       if (!player || !isPlayerReady.current) return;

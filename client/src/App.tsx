@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, FC } from 'react';
 import { VideoPlayer } from './components/VideoPlayer';
 import { VideoInput } from './components/VideoInput';
 import { RoomInfo } from './components/RoomInfo';
@@ -25,7 +25,7 @@ function generateRoomId() {
   return Math.random().toString(36).substring(2, 8);
 }
 
-export default function App() {
+const App: FC = () => {
   const [videoId, setVideoId] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
   const [username, setUsername] = useState<string>('');
@@ -130,3 +130,5 @@ export default function App() {
     </Layout>
   );
 }
+
+export default App;
