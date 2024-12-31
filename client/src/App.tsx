@@ -6,7 +6,20 @@ import { Layout } from './components/Layout';
 import { Chat } from './components/Chat';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3001');
+// In development, Socket.IO will use the Vite proxy
+// In production, it will use the environment variable
+const SOCKET_URL = import.meta.env.PROD 
+  ? import.meta.env.VITE_API_URL 
+  : '';
+
+const socket = io(SOCKET_URL, {
+  path: '/socket.io',
+  transports: ['websocket', 'polling'],
+  autoConnect: true,
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+});
 
 function generateRoomId() {
   return Math.random().toString(36).substring(2, 8);
