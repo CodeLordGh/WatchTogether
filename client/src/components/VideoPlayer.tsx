@@ -24,45 +24,65 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, roomId, socke
 
     socket.on('play', (timestamp: number) => {
       if (playerRef.current && !isUserSeeking.current) {
-        const currentTime = playerRef.current.getCurrentTime();
-        if (Math.abs(currentTime - timestamp) > syncThreshold) {
-          playerRef.current.seekTo(timestamp);
+        try {
+          const currentTime = playerRef.current.getCurrentTime();
+          if (Math.abs(currentTime - timestamp) > syncThreshold) {
+            playerRef.current.seekTo(timestamp, true);
+          }
+          playerRef.current.playVideo();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error('Error during play:', error);
         }
-        playerRef.current.playVideo();
-        setIsPlaying(true);
       }
     });
 
     socket.on('pause', () => {
       if (playerRef.current && !isUserSeeking.current) {
-        playerRef.current.pauseVideo();
-        setIsPlaying(false);
+        try {
+          playerRef.current.pauseVideo();
+          setIsPlaying(false);
+        } catch (error) {
+          console.error('Error during pause:', error);
+        }
       }
     });
 
     socket.on('seek', (timestamp: number) => {
       if (playerRef.current && !isUserSeeking.current) {
-        playerRef.current.seekTo(timestamp);
+        try {
+          playerRef.current.seekTo(timestamp, true);
+        } catch (error) {
+          console.error('Error during seek:', error);
+        }
       }
     });
 
     // Sync state on initial join
     socket.on('sync_state', (state: { currentTime: number; isPlaying: boolean }) => {
       if (playerRef.current && !isUserSeeking.current) {
-        playerRef.current.seekTo(state.currentTime);
-        if (state.isPlaying) {
-          playerRef.current.playVideo();
-        } else {
-          playerRef.current.pauseVideo();
+        try {
+          playerRef.current.seekTo(state.currentTime, true);
+          if (state.isPlaying) {
+            playerRef.current.playVideo();
+          } else {
+            playerRef.current.pauseVideo();
+          }
+          setIsPlaying(state.isPlaying);
+        } catch (error) {
+          console.error('Error during sync:', error);
         }
-        setIsPlaying(state.isPlaying);
       }
     });
 
     const syncInterval = setInterval(() => {
       if (playerRef.current && isPlaying && !isUserSeeking.current) {
-        const currentTime = playerRef.current.getCurrentTime();
-        socket.emit('sync_time', { roomId, currentTime });
+        try {
+          const currentTime = playerRef.current.getCurrentTime();
+          socket.emit('sync_time', { roomId, currentTime });
+        } catch (error) {
+          console.error('Error during sync interval:', error);
+        }
       }
     }, 5000); // Sync every 5 seconds while playing
 
@@ -81,12 +101,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, roomId, socke
 
     const interval = setInterval(async () => {
       if (playerRef.current) {
-        const time = await playerRef.current.getCurrentTime();
-        const duration = await playerRef.current.getDuration();
-        const title = await playerRef.current.getVideoData().title;
-        
-        const context = `Currently watching "${title}" at ${Math.floor(time / 60)}:${Math.floor(time % 60).toString().padStart(2, '0')} out of ${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`;
-        onContextUpdate(context);
+        try {
+          const time = await playerRef.current.getCurrentTime();
+          const duration = await playerRef.current.getDuration();
+          const videoData = await playerRef.current.getVideoData();
+          const title = videoData?.title || 'Unknown';
+          
+          const context = `Currently watching "${title}" at ${Math.floor(time / 60)}:${Math.floor(time % 60).toString().padStart(2, '0')} out of ${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`;
+          onContextUpdate(context);
+        } catch (error) {
+          console.error('Error updating context:', error);
+        }
       }
     }, 30000);
 
@@ -138,15 +163,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, roomId, socke
 
   const handleReady = useCallback((event: any) => {
     playerRef.current = event.target;
+    setIsReady(true);
     socket.emit('request_sync', roomId);
   }, [roomId, socket]);
 
   const handleSeek = useCallback((event: any) => {
     isUserSeeking.current = true;
-    const newTime = Math.floor(event.target.getCurrentTime());
-    if (Math.abs(newTime - currentTime) > syncThreshold) {
-      setCurrentTime(newTime);
-      socket.emit('seek', { roomId, currentTime: newTime });
+    try {
+      const newTime = Math.floor(event.target.getCurrentTime());
+      if (Math.abs(newTime - currentTime) > syncThreshold) {
+        setCurrentTime(newTime);
+        socket.emit('seek', { roomId, currentTime: newTime });
+      }
+    } catch (error) {
+      console.error('Error during seek:', error);
     }
     setTimeout(() => {
       isUserSeeking.current = false;
@@ -159,6 +189,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, roomId, socke
     playerVars: {
       autoplay: 1,
       controls: 1,
+      origin: window.location.origin,
+      enablejsapi: 1,
     },
   };
 
@@ -181,14 +213,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, roomId, socke
       <div className="mt-4 flex justify-center space-x-4">
         <button
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-          onClick={() => playerRef.current?.playVideo()}
+          onClick={() => {
+            try {
+              playerRef.current?.playVideo();
+            } catch (error) {
+              console.error('Error playing video:', error);
+            }
+          }}
           disabled={!isReady || isPlaying}
         >
           <Play className="w-6 h-6" />
         </button>
         <button
           className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-          onClick={() => playerRef.current?.pauseVideo()}
+          onClick={() => {
+            try {
+              playerRef.current?.pauseVideo();
+            } catch (error) {
+              console.error('Error pausing video:', error);
+            }
+          }}
           disabled={!isReady || !isPlaying}
         >
           <Pause className="w-6 h-6" />

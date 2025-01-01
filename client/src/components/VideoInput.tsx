@@ -1,56 +1,87 @@
-import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { useState } from 'react';
+import { VideoSearch } from './VideoSearch';
 
 interface VideoInputProps {
   onSubmit: (videoId: string) => void;
+  isVideoPlaying?: boolean;
 }
 
-export const VideoInput: React.FC<VideoInputProps> = ({ onSubmit }) => {
-  const [input, setInput] = useState('');
+export function VideoInput({ onSubmit, isVideoPlaying }: VideoInputProps) {
+  const [url, setUrl] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    let videoId = input;
-    
-    try {
-      const url = new URL(input);
-      if (url.hostname.includes('youtube.com')) {
-        videoId = url.searchParams.get('v') || '';
-      } else if (url.hostname === 'youtu.be') {
-        videoId = url.pathname.slice(1);
-      }
-    } catch {
-      // Input is not a URL, assume it's a video ID
-    }
-
+    const videoId = extractVideoId(url);
     if (videoId) {
       onSubmit(videoId);
-      setInput('');
+      setUrl('');
+    }
+  };
+
+  const extractVideoId = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname.includes('youtube.com')) {
+        return urlObj.searchParams.get('v');
+      } else if (urlObj.hostname.includes('youtu.be')) {
+        return urlObj.pathname.slice(1);
+      }
+    } catch {
+      // If URL parsing fails, check if the input is a direct video ID
+      if (url.match(/^[a-zA-Z0-9_-]{11}$/)) {
+        return url;
+      }
+    }
+    alert('Please enter a valid YouTube URL or video ID');
+    return null;
+  };
+
+  const handleVideoSelect = (videoUrl: string) => {
+    setUrl(videoUrl);
+    const videoId = extractVideoId(videoUrl);
+    if (videoId) {
+      onSubmit(videoId);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-xl">
-      <div className="relative">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Enter YouTube URL or video ID"
-          className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 dark:border-gray-700 
-                   bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                   placeholder-gray-500 dark:placeholder-gray-400"
-        />
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="flex justify-center space-x-4 mb-4">
         <button
-          type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 dark:text-gray-400
-                   hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          onClick={() => setShowSearch(false)}
+          className={`px-4 py-2 rounded-lg ${!showSearch ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
         >
-          <Search className="w-5 h-5" />
+          Direct URL
+        </button>
+        <button
+          onClick={() => setShowSearch(true)}
+          className={`px-4 py-2 rounded-lg ${showSearch ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          Search Videos
         </button>
       </div>
-    </form>
+
+      {showSearch ? (
+        <VideoSearch onVideoSelect={handleVideoSelect} isVideoPlaying={isVideoPlaying || false} />
+      ) : (
+        <form onSubmit={handleSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Enter YouTube URL or video ID"
+            className="flex-1 px-4 py-2 rounded-lg border border-gray-300"
+          />
+          <button
+            type="submit"
+            disabled={!url.trim()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+          >
+            Watch
+          </button>
+        </form>
+      )}
+    </div>
   );
-};
+}

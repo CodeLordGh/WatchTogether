@@ -29,6 +29,7 @@ const App: FC = () => {
   const [videoId, setVideoId] = useState<string>('');
   const [roomId, setRoomId] = useState<string>('');
   const [username, setUsername] = useState<string>('');
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   useEffect(() => {
     const savedUsername = localStorage.getItem('username');
@@ -59,11 +60,14 @@ const App: FC = () => {
     }
 
     // Listen for room state updates
-    socket.on('sync_state', (state: { videoId?: string }) => {
+    socket.on('sync_state', (state: { videoId?: string; isPlaying?: boolean }) => {
       if (state.videoId && !videoFromUrl) {
         setVideoId(state.videoId);
         const newUrl = `${window.location.pathname}?room=${roomFromUrl}&v=${state.videoId}`;
         window.history.pushState({}, '', newUrl);
+      }
+      if (typeof state.isPlaying === 'boolean') {
+        setIsVideoPlaying(state.isPlaying);
       }
     });
 
@@ -74,9 +78,14 @@ const App: FC = () => {
       window.history.pushState({}, '', newUrl);
     });
 
+    socket.on('play', () => setIsVideoPlaying(true));
+    socket.on('pause', () => setIsVideoPlaying(false));
+
     return () => {
       socket.off('sync_state');
       socket.off('video_updated');
+      socket.off('play');
+      socket.off('pause');
     };
   }, []);
 
@@ -104,10 +113,10 @@ const App: FC = () => {
         
         <div className="flex flex-col items-center space-y-4">
           <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
-            Watch YouTube Together
+            Watch Videos Together
           </h2>
           
-          <VideoInput onSubmit={handleVideoSubmit} />
+          <VideoInput onSubmit={handleVideoSubmit} isVideoPlaying={isVideoPlaying} />
           
           {videoId && (
             <VideoPlayer

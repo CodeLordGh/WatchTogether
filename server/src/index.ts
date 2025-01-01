@@ -26,7 +26,7 @@ app.use(cors({
 new SocketController(io);
 
 // Initialize routes
-app.use(routes);
+app.use('/api', routes);
 
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

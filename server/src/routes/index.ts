@@ -1,5 +1,6 @@
 import { Router, static as expressStatic } from 'express';
 import path from 'path';
+import { searchVideosHandler } from '../controllers/videoController';
 
 const router = Router();
 
@@ -12,6 +13,9 @@ router.get('/health', (_, res) => {
 router.get('/api/health', (_, res) => {
   res.send("Hello");
 });
+
+// Video search endpoint
+router.get('/videos/search', searchVideosHandler);
 
 // Production static file serving
 if (process.env.NODE_ENV === 'production') {
