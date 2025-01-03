@@ -1,8 +1,10 @@
 import { google, youtube_v3 } from 'googleapis';
 import { SearchResponse, VideoResult } from '../../types/video';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const RESULTS_PER_PAGE = 5;
-const API_KEY = 'AIzaSyBQC8XmEsJMa9MqAfgpoF4D9T5t45x0r80';
+const API_KEY = process.env.YOUTUBE_API_KEY;
 
 const youtube = google.youtube({
   version: 'v3',

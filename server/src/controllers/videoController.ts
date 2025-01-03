@@ -10,7 +10,7 @@ export const searchVideosHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
-    if (source !== 'youtube' && source !== 'telegram') {
+    if (source !== 'youtube' && source !== 'telegram' && source !== 'dailymotion') {
       return res.status(400).json({ error: 'Invalid source' });
     }
 

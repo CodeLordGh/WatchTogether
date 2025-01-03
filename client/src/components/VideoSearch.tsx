@@ -49,6 +49,7 @@ export const VideoSearch: React.FC<VideoSearchProps> = ({ onVideoSelect, isVideo
           >
             <option value="youtube">YouTube</option>
             <option value="telegram">Telegram</option>
+            <option value="dailymotion">Dailymotion</option>
           </select>
         </div>
         <button

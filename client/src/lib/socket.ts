@@ -5,7 +5,7 @@ class SocketClient {
   private static instance: SocketClient;
 
   private constructor() {
-    this.socket = io('http://localhost:5173', {
+    this.socket = io('http://localhost:3001', {
       path: '/socket.io',
       withCredentials: true,
     });
@@ -37,45 +37,52 @@ class SocketClient {
     this.socket.emit('join_room', roomId);
   }
 
-  onRoomState(callback: (state: any) => void) {
-    this.socket.on('room_state', callback);
+  onRoomState(roomId: string, callback: (state: any) => void) {
+    this.socket.on(`room_state:${roomId}`, callback);
   }
 
-  play() {
-    this.socket.emit('play');
+  play(roomId: string) {
+    this.socket.emit('play', { roomId });
   }
 
-  onPlay(callback: () => void) {
-    this.socket.on('play', callback);
+  onPlay(roomId: string, callback: () => void) {
+    this.socket.on(`play:${roomId}`, callback);
   }
 
-  pause() {
-    this.socket.emit('pause');
+  pause(roomId: string) {
+    this.socket.emit('pause', { roomId });
   }
 
-  onPause(callback: () => void) {
-    this.socket.on('pause', callback);
+  onPause(roomId: string, callback: () => void) {
+    this.socket.on(`pause:${roomId}`, callback);
   }
 
-  seek(time: number) {
-    this.socket.emit('seek', time);
+  seek(roomId: string, time: number) {
+    this.socket.emit('seek', { roomId, time });
   }
 
-  onSeek(callback: (time: number) => void) {
-    this.socket.on('seek', callback);
+  onSeek(roomId: string, callback: (time: number) => void) {
+    this.socket.on(`seek:${roomId}`, callback);
   }
 
-  syncTime(time: number) {
-    this.socket.emit('sync_time', time);
+  syncTime(roomId: string, time: number) {
+    this.socket.emit('sync_time', { roomId, time });
   }
 
-  onSyncTime(callback: (time: number) => void) {
-    this.socket.on('sync_time', callback);
+  onSyncTime(roomId: string, callback: (time: number) => void) {
+    this.socket.on(`sync_time:${roomId}`, callback);
   }
 
-  cleanup() {
-    this.socket.removeAllListeners();
-    this.socket.disconnect();
+  requestSync(roomId: string) {
+    this.socket.emit('request_sync', { roomId });
+  }
+
+  cleanup(roomId: string) {
+    this.socket.off(`room_state:${roomId}`);
+    this.socket.off(`play:${roomId}`);
+    this.socket.off(`pause:${roomId}`);
+    this.socket.off(`seek:${roomId}`);
+    this.socket.off(`sync_time:${roomId}`);
   }
 }
 

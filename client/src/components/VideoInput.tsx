@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { VideoSearch } from './VideoSearch';
+import { extractYouTubeId, extractDailymotionId, isYouTubeUrl, isDailymotionUrl } from '../utils/videoUtils';
 
 interface VideoInputProps {
   onSubmit: (videoId: string) => void;
@@ -20,20 +21,31 @@ export function VideoInput({ onSubmit, isVideoPlaying }: VideoInputProps) {
   };
 
   const extractVideoId = (url: string) => {
+    // First check if it's already a valid video ID
+    if (isYouTubeUrl(url) || isDailymotionUrl(url)) {
+      return url;
+    }
+
     try {
       const urlObj = new URL(url);
-      if (urlObj.hostname.includes('youtube.com')) {
-        return urlObj.searchParams.get('v');
-      } else if (urlObj.hostname.includes('youtu.be')) {
-        return urlObj.pathname.slice(1);
+      // Handle YouTube URLs
+      if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+        const id = extractYouTubeId(url);
+        if (id) return id;
+      }
+      // Handle Dailymotion URLs
+      else if (urlObj.hostname.includes('dailymotion.com')) {
+        const id = extractDailymotionId(url);
+        if (id) return id;
       }
     } catch {
       // If URL parsing fails, check if the input is a direct video ID
-      if (url.match(/^[a-zA-Z0-9_-]{11}$/)) {
+      if (isYouTubeUrl(url) || isDailymotionUrl(url)) {
         return url;
       }
     }
-    alert('Please enter a valid YouTube URL or video ID');
+    
+    alert('Please enter a valid YouTube or Dailymotion URL/video ID');
     return null;
   };
 

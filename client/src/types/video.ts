@@ -1,4 +1,4 @@
-export type VideoSource = 'youtube' | 'telegram';
+export type VideoSource = 'youtube' | 'telegram' | 'dailymotion';
 
 export interface VideoResult {
   id: string;
@@ -7,6 +7,7 @@ export interface VideoResult {
   source: VideoSource;
   thumbnail?: string;
   url: string;
+  embedUrl?: string;
 }
 
 export interface SearchResponse {
