@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { DailymotionService } from '../services/dailymotion/dailymotionService';
-import { searchTelegramVideos } from '../services/telegram/search';
+// import { DailymotionService } from '../services/dailymotion/dailymotionService';
+// import { searchTelegramVideos } from '../services/telegram/search';
 import { VideoSource } from '../types/video';
 
 const router = Router();
-const dailymotion = new DailymotionService();
+// const dailymotion = new DailymotionService();
 
 router.get('/search', async (req, res) => {
   const query = req.query.query as string;
@@ -26,14 +26,14 @@ router.get('/search', async (req, res) => {
     let response;
 
     switch (source) {
-      case 'dailymotion':
-        const page = pageToken ? parseInt(pageToken) : 1;
-        response = await dailymotion.searchVideos(query, page);
-        break;
+      // case 'dailymotion':
+      //   const page = pageToken ? parseInt(pageToken) : 1;
+      //   response = await dailymotion.searchVideos(query, page);
+      //   break;
 
-      case 'telegram':
-        response = await searchTelegramVideos(query, 'telegram', undefined, pageToken);
-        break;
+      // case 'telegram':
+      //   response = await searchTelegramVideos(query, 'telegram', undefined, pageToken);
+      //   break;
 
       case 'youtube':
         // Existing YouTube search logic

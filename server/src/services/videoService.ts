@@ -21,104 +21,104 @@ export class VideoService {
 
   async searchVideos(query: string, source: VideoSource, pageToken?: string): Promise<SearchResponse> {
     return source === 'telegram' 
-      ? this.searchTelegramVideos(query, pageToken)
+      ? undefined as any // this.searchTelegramVideos(query, pageToken)
       : this.searchYoutubeVideos(query, pageToken);
   }
 
-  private async searchTelegramVideos(query: string, pageToken?: string): Promise<SearchResponse> {
-    try {
-      if (!process.env.TELEGRAM_BOT_TOKEN) {
-        throw new Error('Telegram bot token is not configured');
-      }
+  // private async searchTelegramVideos(query: string, pageToken?: string): Promise<SearchResponse> {
+  //   try {
+  //     if (!process.env.TELEGRAM_BOT_TOKEN) {
+  //       throw new Error('Telegram bot token is not configured');
+  //     }
 
-      // First try searching in the target channel
-      let results = await this.searchTelegramChannel(this.TARGET_CHANNEL, query, pageToken);
+  //     // First try searching in the target channel
+  //     let results = await this.searchTelegramChannel(this.TARGET_CHANNEL, query, pageToken);
       
-      // If no results found, search in public domain
-      if (results.results.length === 0) {
-        results = await this.searchTelegramPublic(query, pageToken);
-      }
+  //     // If no results found, search in public domain
+  //     if (results.results.length === 0) {
+  //       results = await this.searchTelegramPublic(query, pageToken);
+  //     }
 
-      return results;
-    } catch (error) {
-      console.error('Error searching Telegram videos:', error);
-      throw new Error(error instanceof Error ? error.message : 'Failed to search Telegram videos');
-    }
-  }
+  //     return results;
+  //   } catch (error) {
+  //     console.error('Error searching Telegram videos:', error);
+  //     throw new Error(error instanceof Error ? error.message : 'Failed to search Telegram videos');
+  //   }
+  // }
 
-  private async searchTelegramChannel(channelUsername: string, query: string, pageToken?: string): Promise<SearchResponse> {
-    try {
-      const offset = pageToken ? parseInt(pageToken) : 0;
-      const messages = await this.telegramBot.telegram.searchMessages(channelUsername, {
-        query,
-        limit: this.RESULTS_PER_PAGE,
-        offset: offset,
-        filter: 'video'
-      });
+  // private async searchTelegramChannel(channelUsername: string, query: string, pageToken?: string): Promise<SearchResponse> {
+  //   try {
+  //     const offset = pageToken ? parseInt(pageToken) : 0;
+  //     const messages = await this.telegramBot.telegram.searchMessages(channelUsername, {
+  //       query,
+  //       limit: this.RESULTS_PER_PAGE,
+  //       offset: offset,
+  //       filter: 'video'
+  //     });
 
-      if (!messages || !Array.isArray(messages)) {
-        return { results: [], hasMore: false };
-      }
+  //     if (!messages || !Array.isArray(messages)) {
+  //       return { results: [], hasMore: false };
+  //     }
 
-      const results: VideoResult[] = messages
-        .filter(msg => msg.video)
-        .map(msg => ({
-          id: msg.message_id.toString(),
-          title: msg.caption || 'Untitled Video',
-          duration: msg.video?.duration ? `${msg.video.duration}s` : '',
-          source: 'telegram' as const,
-          thumbnail: msg.video?.thumb?.file_id,
-          url: `https://t.me/${channelUsername}/${msg.message_id}`
-        }));
+  //     const results: VideoResult[] = messages
+  //       .filter(msg => msg.video)
+  //       .map(msg => ({
+  //         id: msg.message_id.toString(),
+  //         title: msg.caption || 'Untitled Video',
+  //         duration: msg.video?.duration ? `${msg.video.duration}s` : '',
+  //         source: 'telegram' as const,
+  //         thumbnail: msg.video?.thumb?.file_id,
+  //         url: `https://t.me/${channelUsername}/${msg.message_id}`
+  //       }));
 
-      return {
-        results,
-        hasMore: messages.length === this.RESULTS_PER_PAGE,
-        nextPageToken: (offset + this.RESULTS_PER_PAGE).toString()
-      };
-    } catch (error) {
-      console.error('Error searching Telegram channel:', error);
-      throw new Error('Failed to search Telegram channel');
-    }
-  }
+  //     return {
+  //       results,
+  //       hasMore: messages.length === this.RESULTS_PER_PAGE,
+  //       nextPageToken: (offset + this.RESULTS_PER_PAGE).toString()
+  //     };
+  //   } catch (error) {
+  //     console.error('Error searching Telegram channel:', error);
+  //     throw new Error('Failed to search Telegram channel');
+  //   }
+  // }
 
-  private async searchTelegramPublic(query: string, pageToken?: string): Promise<SearchResponse> {
-    try {
-      const offset = pageToken ? parseInt(pageToken) : 0;
-      const messages = await this.telegramBot.telegram.searchGlobal({
-        query,
-        limit: this.RESULTS_PER_PAGE,
-        offset: offset,
-        filter: 'video'
-      });
+  // private async searchTelegramPublic(query: string, pageToken?: string): Promise<SearchResponse> {
+  //   try {
+  //     const offset = pageToken ? parseInt(pageToken) : 0;
+  //     const messages = await this.telegramBot.telegram.searchGlobal({
+  //       query,
+  //       limit: this.RESULTS_PER_PAGE,
+  //       offset: offset,
+  //       filter: 'video'
+  //     });
 
-      if (!messages || !Array.isArray(messages)) {
-        return { results: [], hasMore: false };
-      }
+  //     if (!messages || !Array.isArray(messages)) {
+  //       return { results: [], hasMore: false };
+  //     }
 
-      const results: VideoResult[] = messages
-        .filter(msg => msg.video)
-        .map(msg => ({
-          id: `${msg.chat.id}_${msg.message_id}`,
-          title: msg.caption || 'Untitled Video',
-          duration: msg.video?.duration ? `${msg.video.duration}s` : '',
-          source: 'telegram' as const,
-          thumbnail: msg.video?.thumb?.file_id,
-          url: msg.chat.username 
-            ? `https://t.me/${msg.chat.username}/${msg.message_id}`
-            : `https://t.me/c/${msg.chat.id}/${msg.message_id}`
-        }));
+  //     const results: VideoResult[] = messages
+  //       .filter(msg => msg.video)
+  //       .map(msg => ({
+  //         id: `${msg.chat.id}_${msg.message_id}`,
+  //         title: msg.caption || 'Untitled Video',
+  //         duration: msg.video?.duration ? `${msg.video.duration}s` : '',
+  //         source: 'telegram' as const,
+  //         thumbnail: msg.video?.thumb?.file_id,
+  //         url: msg.chat.username 
+  //           ? `https://t.me/${msg.chat.username}/${msg.message_id}`
+  //           : `https://t.me/c/${msg.chat.id}/${msg.message_id}`
+  //       }));
 
-      return {
-        results,
-        hasMore: messages.length === this.RESULTS_PER_PAGE,
-        nextPageToken: (offset + this.RESULTS_PER_PAGE).toString()
-      };
-    } catch (error) {
-      console.error('Error searching Telegram public:', error);
-      throw new Error('Failed to search Telegram public messages');
-    }
-  }
+  //     return {
+  //       results,
+  //       hasMore: messages.length === this.RESULTS_PER_PAGE,
+  //       nextPageToken: (offset + this.RESULTS_PER_PAGE).toString()
+  //     };
+  //   } catch (error) {
+  //     console.error('Error searching Telegram public:', error);
+  //     throw new Error('Failed to search Telegram public messages');
+  //   }
+  // }
 
   private async searchYoutubeVideos(query: string, pageToken?: string): Promise<SearchResponse> {
     try {
