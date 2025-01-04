@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import routes from './routes';
+import routes from './routes/index';
 import { SocketController } from './controllers/socketController';
 import { CORS_ORIGINS, PORT } from './config';
 

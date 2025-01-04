@@ -1,5 +1,5 @@
 import { Telegraf, Context } from 'telegraf';
-import { Message, Update } from 'telegraf/typings/core/types/typegram';
+// import { Message, Update } from 'telegraf/typings/core/types/typegram';
 import { ExtendedVideoResult } from './types';
 
 const RESULTS_PER_PAGE = 5;

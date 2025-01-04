@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { VideoResult, VideoSource, SearchResponse } from '../types/video';
+import { withInternetCheck } from '../utils/networkUtils';
 
 export const useVideoSearch = () => {
   const [results, setResults] = useState<VideoResult[]>([]);
@@ -17,27 +18,29 @@ export const useVideoSearch = () => {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({
-        query,
-        source,
-        ...(pageToken && { pageToken })
+      await withInternetCheck(async () => {
+        const params = new URLSearchParams({
+          query,
+          source,
+          ...(pageToken && { pageToken })
+        });
+
+        const response = await fetch(`/api/videos/search?${params}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch videos');
+        }
+
+        const data: SearchResponse = await response.json();
+        
+        if (pageToken) {
+          setResults(prev => [...prev, ...data.results]);
+        } else {
+          setResults(data.results);
+        }
+        
+        setHasMore(data.hasMore);
+        setNextPageToken(data.nextPageToken);
       });
-
-      const response = await fetch(`/api/videos/search?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch videos');
-      }
-
-      const data: SearchResponse = await response.json();
-      
-      if (pageToken) {
-        setResults(prev => [...prev, ...data.results]);
-      } else {
-        setResults(data.results);
-      }
-      
-      setHasMore(data.hasMore);
-      setNextPageToken(data.nextPageToken);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
